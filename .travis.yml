@@ -1,0 +1,23 @@
+sudo: required
+
+services:
+- docker
+
+before_install:
+- docker build -t abaranov/react-test -f ./client/Dockerfile.dev ./client
+
+scripts:
+- docker run -e CI=True abaranov/react-test npm test -- --coverage
+
+after_success:
+- docker build -t abaranov/multi-client ./client
+- docker build -t abaranov/multi-nginx ./nginx
+- docker build -t abaranov/multi-server ./server
+- docker build -t abaranov/multi-worker ./worker
+- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin 
+# Pushing images to dockerhub
+- docker push abaranov/multi-client
+- docker push abaranov/multi-nginx 
+- docker push abaranov/multi-server
+- docker push abaranov/multi-worker
+
